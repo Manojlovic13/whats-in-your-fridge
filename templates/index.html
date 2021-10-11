@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-uWxY/CJNBR+1zjPWmfnSnVxwRheevXITnMqoEIeG1LJrdI0GlVs/9cVSyPYXdcSF" crossorigin="anonymous">
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>
+        function addText(event) {
+            var targ = event.target || event.srcElement;
+            document.getElementById("fridge").value += targ.textContent || targ.innerText;
+            document.getElementById("fridge").value += ", ";
+        }
+
+        function clearFridge() {
+            document.getElementById("fridge").value = "";
+        }
+
+        function deleteLastAddedIngredient(){
+            var fridge = document.getElementById("fridge");
+            var ingredients = fridge.value;
+
+            if (ingredients == ""){
+                return;
+            }
+
+            ingredients = ingredients.trim()
+            ingredients = ingredients.slice(0,-1);
+
+            for (let i = ingredients.length - 1; i >= 0; i--){
+                if (ingredients[i] != ","){
+                    ingredients = ingredients.slice(0,-1);
+                }
+                if (ingredients[i] == ","){
+                    document.getElementById("fridge").value = ingredients + " ";
+                    return;
+                }
+            }
+            
+        }
+    </script>
+    <title>What's in your fridge</title>
+</head>
+<body>
+    <div class="d-flex justify-content-evenly container text-center">
+
+        <div class="flex-column justify-content-center">
+            <h2 class="text-muted">Most common ingredients</h2>
+
+            <input type="text"  class="live-search-box form-control" placeholder="search here" />
+
+            <div class="overflow-scroll text-start" style="width:400px; height:200px;">
+                <ul class="live-search-list" type="None" onclick="addText(event)"> 
+                {% for x in data[0] %}
+                    <li style="cursor:pointer;">{{x.name}}</li>
+                {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+        <div class="flex-column justify-content-center">
+            <h2 class="text-muted">Your fridge</h2>
+            <form action="" method="POST">
+                <textarea id="fridge" name="ingredients" rows="10" cols="50" style="resize:none;" class="form-control" readonly required></textarea>
+
+                <div class="mt-2">
+                    <input type="submit" value="Suggest recipe" class="btn btn-primary">
+                    <button type="button" onclick="deleteLastAddedIngredient()" class="btn btn-primary">Remove last ingredient</button>
+                    <button type="button" onclick="clearFridge()" class="btn btn-primary">Clear fridge</button>
+                </div>
+            </form>
+
+        </div>
+       
+    </div>
+
+    {% if data[1] != null %}
+    <div class="flex-column container">
+        <hr>
+        {% for x in data[1] %}
+            <div class="d-flex">
+                <div class="flex-column text-center">
+                    <h4>{{x.name}}</h4>
+                    <img src="{{x.picture}}" class="img-thumbnail" alt="recipe-pic">
+                </div>
+                <div class="flex-column align-items-center container">
+                    <div>
+                        <p><strong>Ingredients you already have:</strong>
+                            {% for i in range(x.used_ingredients|length): %} 
+                                {% if i == x.used_ingredients|length - 1 %}
+                                    {{x.used_ingredients[i].name + "."}}
+                                {% else %}
+                                    {{x.used_ingredients[i].name + ","}}
+                                {% endif %}
+                            {% endfor %}
+                        </p>
+                    </div>
+                    <div>
+                    <p><strong>Ingredients you need:</strong>
+                        {% for i in range(x.missed_ingredients|length): %}
+                            {% if i == x.missed_ingredients|length - 1 %}
+                                {{x.missed_ingredients[i].name + "[" + x.missed_ingredients[i].needed + "]" + "."}}
+                            {% else %}
+                                {{x.missed_ingredients[i].name + "[" + x.missed_ingredients[i].needed + "]" + ", "}}
+                            {% endif %}
+                        {% endfor %}
+                    </p>
+                    </div>
+                    <div class="float-end">
+                        <a href="https://www.google.rs/search?q={% for i in x.name.split(" ") %}{{i + "+"}}{% endfor %}" class="btn btn-secondary" target="_blank">Google search recipe</a>
+                    </div>
+                </div>
+            </div>
+            <hr>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <script src="https://code.jquery.com/jquery-3.5.1.js" integrity="sha256-QWo7LDvxbWT2tbbQ97B53yJnYU3WhH/C8ycbRAkjPDc=" crossorigin="anonymous"></script>
+    <script type="text/javascript">
+        jQuery(document).ready(function($){
+      
+            $('.live-search-list li').each(function(){
+            $(this).attr('data-search-term', $(this).text().toLowerCase());
+            });
+      
+            $('.live-search-box').on('keyup', function(){
+      
+            var searchTerm = $(this).val().toLowerCase();
+      
+            $('.live-search-list li').each(function(){
+      
+            if ($(this).filter('[data-search-term *= ' + searchTerm + ']').length > 0 || searchTerm.length < 1) {
+                $(this).show();
+            } else {
+                $(this).hide();
+            }
+            });
+      
+            });
+      
+    });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-kQtW33rZJAHjgefvhyyzcGF3C5TFyBQBA13V1RKPf4uH+bwyzQxZ6CmMZHmNBEfJ" crossorigin="anonymous"></script>
+</body>
+</html>
